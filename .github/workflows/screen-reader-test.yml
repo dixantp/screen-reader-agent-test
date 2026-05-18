@@ -19,12 +19,6 @@ jobs:
       - name: Checkout developer code
         uses: actions/checkout@v4
 
-      - name: Show what we got
-        shell: powershell
-        run: |
-          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
-          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse | Select-Object FullName
-
       - name: Start NVDA
         shell: powershell
         run: |
@@ -40,6 +34,8 @@ jobs:
 
       - name: Run accessibility audit
         shell: powershell
+        env:
+          PYTHONUTF8: "1"
         run: |
           C:\Users\dixan\Documents\sr-agent\run_audit.bat `
             --repo-path "$env:GITHUB_WORKSPACE" `
@@ -47,9 +43,13 @@ jobs:
 
       - name: Stop NVDA
         if: always()
+        continue-on-error: true
         shell: powershell
         run: |
+          & "C:\Program Files (x86)\NVDA\nvda.exe" -q 2>$null
+          Start-Sleep -Seconds 2
           taskkill /F /IM nvda.exe 2>$null
+          Write-Host "NVDA cleanup attempted"
           exit 0
 
       - name: List audit output
@@ -68,5 +68,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-report
-          path: ${{ github.workspace }}/.audit_output/*.md
-          if-no-files-found: warn
+          path: .audit_output/*.md
+          if-no-files-found: error
