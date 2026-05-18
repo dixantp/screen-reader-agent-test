@@ -2,4 +2,10 @@ project_name: "Accessibility Demo Site"
 entry_point: "src/"
 goals:
   - page: "accessible.html"
-    task: "Locate the support form and report what fields it contains."
+    task: "Locate the support form and submit a technical issue request. Fill in Full Name with 'Jane Doe', Email Address with 'jane@example.com', select the Billing issue category, and write 'I was double-charged on my last invoice' as the message. Then submit the form."
+
+  - page: "ambiguous.html"
+    task: "Find the Q2 earnings summary article and read its content."
+
+  - page: "inaccessible.html"
+    task: "Attempt to fill out the checkout form, going through each field in order from top to bottom."

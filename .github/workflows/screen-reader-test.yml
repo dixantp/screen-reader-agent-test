@@ -6,6 +6,11 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+    contents: read
+    issues: write
+    pull-requests: write
+
 concurrency:
   group: nvda-runner
   cancel-in-progress: false
@@ -13,7 +18,7 @@ concurrency:
 jobs:
   audit:
     runs-on: [self-hosted, windows, nvda-windows]
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout developer code
@@ -49,22 +54,12 @@ jobs:
           try {
             & "C:\Program Files (x86)\NVDA\nvda.exe" -q 2>&1 | Out-Null
           } catch {}
+          Start-Sleep -Seconds 2
           try {
             taskkill /F /IM nvda.exe 2>&1 | Out-Null
           } catch {}
           Write-Host "NVDA cleanup attempted"
           exit 0
-
-      - name: List audit output
-        if: always()
-        shell: powershell
-        run: |
-          $dir = Join-Path $env:GITHUB_WORKSPACE ".audit_output"
-          if (Test-Path $dir) {
-            Get-ChildItem $dir | Select-Object Name, Length
-          } else {
-            Write-Host "No .audit_output directory"
-          }
 
       - name: Upload audit reports
         if: always()
@@ -78,30 +73,29 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
-            script: |
-                const fs = require('fs');
-                const path = require('path');
-                const dir = path.join(process.env.GITHUB_WORKSPACE, '.audit_output');
-                if (!fs.existsSync(dir)) {
-                console.log('No audit output directory; skipping comment');
-                return;
-                }
-                const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
-                if (files.length === 0) {
-                console.log('No markdown files; skipping comment');
-                return;
-                }
-                const sections = files.map(f => {
-                const content = fs.readFileSync(path.join(dir, f), 'utf8');
-                return content;
-                });
-                let body = '## Screen Reader Accessibility Audit\n\n' + sections.join('\n\n---\n\n');
-                if (body.length > 60000) {
-                body = body.slice(0, 60000) + '\n\n*(truncated — see artifact for full report)*';
-                }
-                await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body,
-                });
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const dir = path.join(process.env.GITHUB_WORKSPACE, 'audit_output');
+            if (!fs.existsSync(dir)) {
+              console.log('No audit_output directory; skipping comment');
+              return;
+            }
+            const files = fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort();
+            if (files.length === 0) {
+              console.log('No markdown files; skipping comment');
+              return;
+            }
+            const sections = files.map(f => fs.readFileSync(path.join(dir, f), 'utf8'));
+            let body = '## Screen Reader Accessibility Audit\n\n' +
+                       `Results from ${files.length} goal${files.length > 1 ? 's' : ''}:\n\n` +
+                       sections.join('\n\n---\n\n');
+            if (body.length > 60000) {
+              body = body.slice(0, 60000) + '\n\n*(truncated — see artifact for full report)*';
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
