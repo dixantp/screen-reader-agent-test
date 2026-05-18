@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Support</title>
+    </head>
+<body>
+<a href="#main">Skip to main content</a>
+<header><h1>Support Portal</h1></header>
+<nav aria-label="Main navigation">
+    <a href="#">Dashboard</a> <a href="#" aria-current="page">Contact Support</a> <a href="#">Help</a>
+</nav>
+<main id="main">
+    <h2 id="fh">Contact Support</h2>
+    <div id="conf" role="alert"></div>
+    <form aria-labelledby="fh" id="f">
+        <label for="name">Full Name</label>
+        <input id="name" type="text" required aria-required="true"><br>
+
+        <label for="email">Email Address</label>
+        <input id="email" type="email" required aria-required="true"><br>
+
+        <label for="cat">Issue Category</label>
+        <select id="cat" name="category" required aria-required="true">
+            <option value="">Select a category</option>
+            <option value="billing">Billing</option>
+            <option value="technical">Technical Issue</option>
+            <option value="account">Account Access</option>
+        </select><br>
+
+        <label for="msg">Message</label>
+        <textarea id="msg" required aria-required="true"></textarea><br>
+
+        <button type="submit">Submit Support Request</button>
+    </form>
+</main>
+<script>
+document.getElementById('f').onsubmit = function(e) {
+    e.preventDefault();
+    document.getElementById('conf').textContent = 'Submitted successfully.';
+};
+</script>
+</body>
+</html>

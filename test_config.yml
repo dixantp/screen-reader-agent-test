@@ -1,0 +1,10 @@
+# Tells the host agent engine what to evaluate
+project_name: "Developer Test Site"
+entry_point: "test_sites/"
+goals:
+  - page: "accessible.html"
+    task: "Locate the support form and submit a technical issue request."
+  - page: "ambiguous.html"
+    task: "Find the Q2 earnings summary and read the content."
+  - page: "inaccessible.html"
+    task: "Attempt to fill out the checkout form in order from top to bottom."

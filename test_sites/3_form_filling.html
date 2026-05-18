@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+    </head>
+<body>
+<div><h4>Payment Details</h4></div>
+<div id="conf"></div>
+<form id="f">
+    <input placeholder="Name on card" tabindex="1"><br>
+    <input placeholder="Email for receipt" tabindex="4"><br>
+    <input placeholder="Card number" tabindex="3"><br>
+    <input placeholder="MM/YY" tabindex="2">
+    <input placeholder="CVV" tabindex="5"><br>
+    <button type="submit" tabindex="6">&#x2192;</button>
+</form>
+<script>
+document.getElementById('f').onsubmit=function(e){e.preventDefault();document.getElementById('conf').textContent='Payment submitted.'};
+</script>
+</body>
+</html>

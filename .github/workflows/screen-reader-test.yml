@@ -1,0 +1,37 @@
+name: Screen Reader Accessibility Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Ensure only one test runs at a time to avoid NVDA focus collision
+concurrency:
+  group: nvda-runner
+  cancel-in-progress: false
+
+jobs:
+  accessibility-audit:
+    runs-on: [self-hosted, windows, nvda-windows]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Developer Code
+        uses: actions/checkout@v4
+
+      - name: Execute Local Agent Engine
+        shell: pwsh
+        run: |
+          # The runner is executing directly on your Windows box.
+          # We call your persistent engine script, passing the path to this checked-out repo.
+          # Adjust the path below to where your actual engine lives on the machine.
+          
+          C:\AgentEngine\run_audit.bat --repo-path "$env:GITHUB_WORKSPACE" --config "test_config.yml"
+
+      - name: Upload Audit Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-report
+          path: .audit_output/*.md
