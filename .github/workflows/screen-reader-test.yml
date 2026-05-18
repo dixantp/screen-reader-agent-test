@@ -73,3 +73,35 @@ jobs:
           name: accessibility-report
           path: audit_output
           if-no-files-found: error
+
+      - name: Comment results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+            script: |
+                const fs = require('fs');
+                const path = require('path');
+                const dir = path.join(process.env.GITHUB_WORKSPACE, '.audit_output');
+                if (!fs.existsSync(dir)) {
+                console.log('No audit output directory; skipping comment');
+                return;
+                }
+                const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+                if (files.length === 0) {
+                console.log('No markdown files; skipping comment');
+                return;
+                }
+                const sections = files.map(f => {
+                const content = fs.readFileSync(path.join(dir, f), 'utf8');
+                return content;
+                });
+                let body = '## Screen Reader Accessibility Audit\n\n' + sections.join('\n\n---\n\n');
+                if (body.length > 60000) {
+                body = body.slice(0, 60000) + '\n\n*(truncated — see artifact for full report)*';
+                }
+                await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+                });
