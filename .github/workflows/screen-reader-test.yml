@@ -2,14 +2,71 @@ name: Screen Reader Accessibility Audit
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: nvda-runner
+  cancel-in-progress: false
 
 jobs:
-  hello:
+  audit:
     runs-on: [self-hosted, windows, nvda-windows]
+    timeout-minutes: 30
+
     steps:
-      - name: Confirm we're on the right box
+      - name: Checkout developer code
+        uses: actions/checkout@v4
+
+      - name: Show what we got
         shell: pwsh
         run: |
-          Write-Host "Running on: $env:COMPUTERNAME"
-          Write-Host "As user: $env:USERNAME"
-          Write-Host "Working directory: $PWD"
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse | Select-Object FullName
+
+      - name: Start NVDA
+        shell: pwsh
+        run: |
+          $nvda = "C:\Program Files (x86)\NVDA\nvda.exe"
+          if (Test-Path $nvda) {
+            Start-Process $nvda
+            Start-Sleep -Seconds 5
+            Write-Host "NVDA started"
+          } else {
+            Write-Host "ERROR: NVDA not found at $nvda"
+            exit 1
+          }
+
+      - name: Run accessibility audit
+        shell: pwsh
+        run: |
+          C:\Users\dixan\Documents\sr-agent\run_audit.bat `
+            --repo-path "$env:GITHUB_WORKSPACE" `
+            --config "test_config.yml"
+
+      - name: Stop NVDA
+        if: always()
+        shell: pwsh
+        run: |
+          taskkill /F /IM nvda.exe 2>$null
+          exit 0
+
+      - name: List audit output
+        if: always()
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:GITHUB_WORKSPACE ".audit_output"
+          if (Test-Path $dir) {
+            Get-ChildItem $dir | Select-Object Name, Length
+          } else {
+            Write-Host "No .audit_output directory"
+          }
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-report
+          path: ${{ github.workspace }}/.audit_output/*.md
+          if-no-files-found: warn
