@@ -46,9 +46,12 @@ jobs:
         continue-on-error: true
         shell: powershell
         run: |
-          & "C:\Program Files (x86)\NVDA\nvda.exe" -q 2>$null
-          Start-Sleep -Seconds 2
-          taskkill /F /IM nvda.exe 2>$null
+          try {
+            & "C:\Program Files (x86)\NVDA\nvda.exe" -q 2>&1 | Out-Null
+          } catch {}
+          try {
+            taskkill /F /IM nvda.exe 2>&1 | Out-Null
+          } catch {}
           Write-Host "NVDA cleanup attempted"
           exit 0
 
@@ -69,5 +72,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-report
-          path: ${{ github.workspace }}\.audit_output\*.md
+          path: .audit_output
           if-no-files-found: error
