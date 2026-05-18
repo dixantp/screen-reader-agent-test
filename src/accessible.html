@@ -12,8 +12,10 @@
 </nav>
 <main id="main">
     <h2 id="fh">Contact Support</h2>
-    <div id="conf" role="alert"></div>
-    <form aria-labelledby="fh" id="f">
+    <!-- <div id="conf" role="alert"></div>--> <!-- Accessible -->
+    <!-- <div id="conf"></div>--> <!-- Inaccessible -->
+    <div id="conf"></div>
+    <form aria-labelledby="fh" id="f"> 
         <label for="name">Full Name</label>
         <input id="name" type="text" required aria-required="true"><br>
 
